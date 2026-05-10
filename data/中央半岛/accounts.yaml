@@ -4,7 +4,7 @@ accounts:
     persona_type: investment-advisor
     user_data_dir: accounts/account-001/
     login_status: active
-    last_published_at: 2026-05-10T17:30:00
+    last_published_at: 2026-05-10T20:20:00
     daily_limit: 1
     preferred_window:
       start: "09:00"
