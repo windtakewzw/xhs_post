@@ -1,51 +1,51 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文档为 Claude Code 在此仓库中工作提供指导。
 
-## Project Overview
+## 项目概述
 
-xhs_post is a Xiaohongshu (小红书) content publishing system for real estate projects. It generates real-estate-themed social media posts (copy + images) and publishes them to Xiaohongshu via browser automation.
+xhs_post 是一个小红书内容发布系统，面向房地产项目。生成房产主题的图文笔记（文案 + 图片），通过浏览器自动化发布到小红书。
 
-Current project stage: early implementation — rules system being built first.
+当前阶段：早期实现，优先构建规则体系。
 
-## Planned Modules
+## 模块规划
 
-1. **Rules System** — maintainable Markdown rule files (personas, content types, copywriting, images, hashtags)
-2. **Content Generation** — topic selection + Claude API copywriting + Seedream API image generation
-3. **Publishing Engine** — Playwright browser automation + scheduling + multi-account management
-4. **Comment Tracking** — monitor and collect comments on published posts
-5. **Comment Reply** — AI-assisted or automated replies to comments
+1. **规则体系** — 可维护的 Markdown 规则文件（人设、内容类型、文案、图片、标签）
+2. **内容生成** — 选题 + Claude API 文案生成 + Seedream API 图片生成
+3. **发布引擎** — Playwright 浏览器自动化 + 调度 + 多账号管理
+4. **评论跟踪** — 监控和采集已发布笔记的评论
+5. **评论回复** — AI 辅助或自动回复评论
 
-See `docs/superpowers/specs/` for design docs, `docs/superpowers/plans/` for implementation plans.
+设计文档见 `docs/superpowers/specs/`，实现计划见 `docs/superpowers/plans/`。
 
-## Commands
+## 常用命令
 
 ```bash
-# Activate virtual environment
+# 激活虚拟环境
 source venv/Scripts/activate
 
-# Run all tests
+# 运行所有测试
 python -m pytest tests/ -v
 
-# Run a single test file
+# 运行单个测试文件
 python -m pytest tests/rules/test_models.py -v
 
-# Run a single test function
+# 运行单个测试函数
 python -m pytest tests/rules/test_models.py::test_persona_creation -v
 ```
 
-## Architecture
+## 架构
 
-**Rules are Markdown files**, not code. The `src/rules/loader.py` parses them into Python dataclasses (`src/rules/models.py`). The assembler (`src/rules/assembler.py`) builds AI prompt context from structured rules.
+规则以 Markdown 文件形式存储，不是代码。`src/rules/loader.py` 将 Markdown 解析为 Python 数据结构（`src/rules/models.py`），`src/rules/assembler.py` 从结构化规则组装 AI Prompt 上下文。
 
-Rules are two-tiered:
-- `rules/*.md` — global rules shared across all projects (copywriting, image generation, hashtag strategy)
-- `rules/{project}/rules.md` — per-project rules (personas, content strategy, taboos)
+规则分两级：
+- `rules/*.md` — 全局规则，跨项目共享（文案写法、图片生成、标签策略）
+- `rules/{项目名}/rules.md` — 项目规则（人设定义、内容策略、禁忌）
 
-The upstream design references are in `D:\project\yj_skills\skills\xiaohongshu\references\` (not a runtime dependency).
+上游设计参考在 `D:\project\yj_skills\skills\xiaohongshu\references\`（非运行时依赖）。
 
-## Dependencies
+## 依赖
 
-- Python 3.11+ (virtual env at `venv/`)
-- PyYAML for frontmatter parsing
-- pytest for testing
+- Python 3.11+（虚拟环境在 `venv/`）
+- PyYAML（frontmatter 解析）
+- pytest（测试）
