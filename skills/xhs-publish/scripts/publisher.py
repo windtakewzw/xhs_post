@@ -21,14 +21,16 @@ def log(msg): print(f"[publisher] {msg}", flush=True)
 def rand_delay(lo=0.5, hi=1.5):
     time.sleep(random.uniform(lo, hi))
 
-# Creator center sidebar menus to randomly browse for anti-detection
+# Creator center sidebar menus for anti-detection browsing
 SIDEBAR_MENUS = ["首页", "笔记管理", "数据看板", "活动中心", "笔记灵感", "创作学院", "创作百科"]
 
-def random_browse(page, count=2):
-    """Randomly click a few sidebar menus to simulate human browsing."""
+def random_browse(page, name=""):
+    """Simulate human browsing: random menus, random scrolls, random pauses."""
+    count = random.randint(2, 5)
     menus = random.sample(SIDEBAR_MENUS, min(count, len(SIDEBAR_MENUS)))
-    for menu in menus:
-        log(f"  浏览: {menu}")
+    log(f"  {name}: 浏览 {len(menus)} 个菜单")
+    for i, menu in enumerate(menus):
+        log(f"    [{i+1}] {menu}")
         clicked = page.evaluate(f"""(m) => {{
             for (const el of document.querySelectorAll('*')) {{
                 if (el.innerText && el.innerText.trim() === m && el.offsetParent) {{
@@ -37,10 +39,14 @@ def random_browse(page, count=2):
             }}
             return false;
         }}""", menu)
-        if clicked:
-            rand_delay(3, 8)  # Simulate reading time
-        else:
-            rand_delay(1, 2)
+        rand_delay(3, 8) if clicked else rand_delay(1, 2)
+        # Random scroll on each page
+        for _ in range(random.randint(0, 3)):
+            page.evaluate(f"window.scrollBy(0, {random.randint(100, 600)})")
+            rand_delay(0.5, 1.5)
+        # Random pause between menus
+        if i < len(menus) - 1 and random.random() > 0.5:
+            rand_delay(2, 5)
 
 
 def human_type(page, text: str, per_char_delay=(60, 180)):
@@ -131,7 +137,7 @@ def publish(args):
 
         # === Random browse before publishing ===
         log("反检测: 随机浏览创作者中心...")
-        random_browse(page, count=random.randint(2, 4))
+        random_browse(page, name="发布前")
         page.goto("https://creator.xiaohongshu.com/publish/publish", wait_until="networkidle", timeout=30000)
         rand_delay(2, 3)
 
@@ -247,48 +253,12 @@ def publish(args):
         else:
             log("WARN: 未找到发布按钮")
 
-        # === Step 8: Collect note ID from profile page ===
-        log("Step 8: 获取笔记ID...")
-        note_id = ""
-        # Try to get user profile URL from current page first
-        user_link = page.evaluate("""() => {
-            const links = document.querySelectorAll('a[href*="/user/profile/"]');
-            for (const l of links) {
-                const href = l.href || '';
-                const m = href.match(/\\/user\\/profile\\/([a-f0-9]+)/);
-                if (m) return m[1];
-            }
-            return '';
-        }""")
-
-        if user_link:
-            page.goto(f"https://www.xiaohongshu.com/user/profile/{user_link}", wait_until="networkidle", timeout=30000)
-        else:
-            page.goto("https://www.xiaohongshu.com/explore", wait_until="networkidle", timeout=30000)
-            rand_delay(2, 4)
-            page.goto(f"https://www.xiaohongshu.com/user/profile/5f3a4b050000000001006d74", wait_until="networkidle", timeout=30000)
-
-        rand_delay(3, 5)
-        # Extract the most recent note link
-        note_id = page.evaluate("""() => {
-            const links = document.querySelectorAll('a[href*="/explore/"]');
-            for (const link of links) {
-                const href = link.href || '';
-                // Skip non-note explore links (homefeed etc)
-                if (href.includes('channel_id') || href.includes('channel_type')) continue;
-                const m = href.match(/\\/explore\\/([a-f0-9]+)/);
-                if (m && m[1].length > 10) return m[1];
-            }
-            return '';
-        }""")
-        if note_id:
-            log(f"笔记ID: {note_id}")
-        else:
-            log("WARN: 无法自动提取笔记ID")
+        # === Step 8: Post-publish check ===
+        log("Step 8: 笔记已提交审核（5-10分钟后可在笔记管理查看）")
 
         # === Random browse after publishing ===
         log("反检测: 发布后随机浏览...")
-        random_browse(page, count=random.randint(1, 2))
+        random_browse(page, name="发布后")
 
         # Save state
         context.storage_state(path=state_file)
