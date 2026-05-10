@@ -1,0 +1,114 @@
+<h2>多账号管理模块设计</h2>
+<p class="subtitle">20账号 · 每楼盘3-5个 · 独立隔离 · 登录态持久化</p>
+
+<div class="section">
+  <h3>账号隔离模型</h3>
+  <div class="mockup">
+    <div class="mockup-header">Playwright BrowserContext 隔离方案</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0;">隔离层</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">实现</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">作用</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>BrowserContext</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">每个账号一个独立 Context</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">Cookie / localStorage / 登录态完全隔离</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>存储目录</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">data/accounts/{account_id}/</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">每个账号独立的 userDataDir，持久化登录态</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>代理IP</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">context 级别 proxy 配置</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">一账号一IP（可选，按需扩展）</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>指纹差异</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">随机 viewport / locale / timezone</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">降低批量识别的关联风险</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据模型</h3>
+  <div class="mockup">
+    <div class="mockup-header">SQLite Schema — accounts 表</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px; overflow-x:auto;">
+<span style="color:#569cd6;">CREATE TABLE</span> accounts (
+    id              <span style="color:#4ec9b0;">TEXT PRIMARY KEY</span>,          <span style="color:#6a9955;">-- uuid</span>
+    name            <span style="color:#4ec9b0;">TEXT NOT NULL</span>,             <span style="color:#6a9955;">-- 账号显示名</span>
+    project_id      <span style="color:#4ec9b0;">TEXT NOT NULL</span>,             <span style="color:#6a9955;">-- 所属楼盘ID</span>
+    xhs_user_id     <span style="color:#4ec9b0;">TEXT</span>,                       <span style="color:#6a9955;">-- 小红书用户ID</span>
+    login_status    <span style="color:#4ec9b0;">TEXT DEFAULT 'pending'</span>,   <span style="color:#6a9955;">-- pending/active/expired/blocked</span>
+    user_data_dir   <span style="color:#4ec9b0;">TEXT NOT NULL</span>,             <span style="color:#6a9955;">-- Playwright userDataDir路径</span>
+    proxy_config    <span style="color:#4ec9b0;">TEXT</span>,                       <span style="color:#6a9955;">-- JSON: {server, username, password}</span>
+    fingerprint     <span style="color:#4ec9b0;">TEXT</span>,                       <span style="color:#6a9955;">-- JSON: {viewport, locale, timezone, ...}</span>
+    daily_limit     <span style="color:#4ec9b0;">INTEGER DEFAULT 1</span>,          <span style="color:#6a9955;">-- 每日发布上限</span>
+    last_post_at    <span style="color:#4ec9b0;">TEXT</span>,                       <span style="color:#6a9955;">-- 最近发布时间</span>
+    total_posts     <span style="color:#4ec9b0;">INTEGER DEFAULT 0</span>,
+    created_at      <span style="color:#4ec9b0;">TEXT DEFAULT (datetime('now'))</span>,
+    updated_at      <span style="color:#4ec9b0;">TEXT DEFAULT (datetime('now'))</span>
+);
+      </pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>登录流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">首次登录 + 登录态复用</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:12px; font-size:13px;">
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong>首次登录</strong>
+          <ol style="margin:8px 0 0 16px; padding:0;">
+            <li>启动该账号的 BrowserContext</li>
+            <li>打开 xiaohongshu.com 登录页</li>
+            <li><strong>人工扫码</strong>（等待用户操作）</li>
+            <li>检测登录成功 → 保存 Cookie</li>
+            <li>写入 login_status = active</li>
+          </ol>
+        </div>
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong>后续复用</strong>
+          <ol style="margin:8px 0 0 16px; padding:0;">
+            <li>加载 userDataDir（含持久化Cookie）</li>
+            <li>访问首页验证登录态</li>
+            <li>有效 → 直接发布</li>
+            <li>失效 → 标记 expired，通知重新扫码</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>楼盘-账号层级</h3>
+  <div class="mockup">
+    <div class="mockup-header">projects 表</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#569cd6;">CREATE TABLE</span> projects (
+    id              <span style="color:#4ec9b0;">TEXT PRIMARY KEY</span>,
+    name            <span style="color:#4ec9b0;">TEXT NOT NULL</span>,        <span style="color:#6a9955;">-- 楼盘名称</span>
+    city            <span style="color:#4ec9b0;">TEXT</span>,
+    developer       <span style="color:#4ec9b0;">TEXT</span>,                  <span style="color:#6a9955;">-- 开发商</span>
+    property_type   <span style="color:#4ec9b0;">TEXT</span>,                  <span style="color:#6a9955;">-- 住宅/商业/别墅等</span>
+    status          <span style="color:#4ec9b0;">TEXT DEFAULT 'active'</span>,  <span style="color:#6a9955;">-- active/paused/completed</span>
+    created_at      <span style="color:#4ec9b0;">TEXT DEFAULT (datetime('now'))</span>
+);
+</pre>
+    </div>
+  </div>
+</div>

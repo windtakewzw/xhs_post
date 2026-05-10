@@ -1,0 +1,150 @@
+<h2>最终设计总览</h2>
+<p class="subtitle">xhs_post 独立系统 — 内容生成 + 发布执行一体化</p>
+
+<div class="section">
+  <h3>设计参照来源</h3>
+  <div class="mockup">
+    <div class="mockup-header">yj_skills references → xhs_post 内容引擎设计</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0;">yj_skills 参考文件</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">核心设计</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">xhs_post 落地方案</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>persona-templates.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">3种人设（投资/生活/家庭顾问）+ 身份设定 + 视觉风格 + 内容禁忌</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">AI Prompt 中的人设卡，直接复用模板结构</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>content-types.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">8种内容类型 + 决策树 + 每种类型的文案结构/图片配置</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">内容选题引擎 + 每种类型对应的 Prompt 模板</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>copywriting-xiaohongshu.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">6种标题公式 + 3种正文模板 + 去AI味7条铁律 + 合规红线</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">直接作为 AI 生成 Prompt 的核心约束</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>image-strategy.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">图片生成决策矩阵 + 多图排版 + Seedream API + 视觉风格提示词</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">图片生成模块，支持 text2img + img2img</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>hashtag-database.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">分层标签策略 + 城市标签库 + 人设标签模板</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">标签生成规则引擎</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><code>generation-examples.md</code></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">3种人设 × 多种内容类型的完整示例</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">Prompt Few-shot 示例素材</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>xhs_post 完整架构</h3>
+  <div class="mockup">
+    <div class="mockup-header">四大模块</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0; width:15%;">模块</th>
+          <th style="padding:8px; border:1px solid #d0d5e0; width:45%;">职责</th>
+          <th style="padding:8px; border:1px solid #d0d5e0; width:40%;">关键实现</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; background:#e8f0fe;">
+            <strong>1. 素材管理</strong>
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            读取 <code>D:\project\yj_skills\data\</code> 目录下的项目资料、人设定义、账号配置、营销日历、图片素材
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            Markdown + YAML frontmatter 解析<br/>素材目录扫描 & 索引
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; background:#e6f4ea;">
+            <strong>2. 内容生产</strong>
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            选题决策 → AI 生成文案 → 图片生成/匹配 → 去重 → 排期入库<br/>
+            参照 yj_skills references 的设计体系
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            营销日历驱动选题<br/>Claude API 文案生成<br/>Seedream API 图片生成<br/>内容去重 & 差异化
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; background:#fef7e0;">
+            <strong>3. 发布引擎</strong>
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            Playwright 浏览器自动化<br/>多账号调度 & 并发控制<br/>登录态维护 & 风控
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            独立 BrowserContext 隔离<br/>移动端模拟 + 反检测<br/>定时调度 + 失败重试
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; background:#fce8e6;">
+            <strong>4. 管理界面</strong>
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            Web Dashboard<br/>账号管理 · 内容审核 · 发布日历 · 数据看板
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            Flask/FastAPI 后端<br/>React 前端（可选简化为纯后端 + CLI）
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>目录结构</h3>
+  <div class="mockup">
+    <div class="mockup-header">项目结构规划</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#569cd6;">xhs_post/</span>
+├── <span style="color:#569cd6;">src/</span>
+│   ├── <span style="color:#569cd6;">content/</span>           <span style="color:#6a9955;"># 内容生产模块</span>
+│   │   ├── planner.py      <span style="color:#6a9955;"># 选题决策</span>
+│   │   ├── generator.py    <span style="color:#6a9955;"># AI文案生成</span>
+│   │   ├── imager.py       <span style="color:#6a9955;"># 图片生成</span>
+│   │   └── templates/      <span style="color:#6a9955;"># Prompt模板</span>
+│   ├── <span style="color:#569cd6;">publisher/</span>         <span style="color:#6a9955;"># 发布引擎</span>
+│   │   ├── engine.py       <span style="color:#6a9955;"># Playwright自动化</span>
+│   │   ├── scheduler.py    <span style="color:#6a9955;"># 定时调度</span>
+│   │   └── anti_detect.py  <span style="color:#6a9955;"># 反检测 & 行为模拟</span>
+│   ├── <span style="color:#569cd6;">accounts/</span>          <span style="color:#6a9955;"># 账号管理</span>
+│   │   ├── manager.py      <span style="color:#6a9955;"># 账号CRUD + 登录</span>
+│   │   └── browser.py      <span style="color:#6a9955;"># BrowserContext工厂</span>
+│   ├── <span style="color:#569cd6;">materials/</span>         <span style="color:#6a9955;"># 素材加载</span>
+│   │   ├── loader.py       <span style="color:#6a9955;"># Markdown/YAML解析</span>
+│   │   └── indexer.py      <span style="color:#6a9955;"># 素材索引 & 检索</span>
+│   ├── <span style="color:#569cd6;">db/</span>                <span style="color:#6a9955;"># 数据层</span>
+│   │   ├── models.py       <span style="color:#6a9955;"># SQLite ORM</span>
+│   │   └── migrations/     <span style="color:#6a9955;"># 数据库迁移</span>
+│   ├── <span style="color:#569cd6;">web/</span>               <span style="color:#6a9955;"># Web管理界面</span>
+│   │   ├── app.py          <span style="color:#6a9955;"># FastAPI应用</span>
+│   │   └── routes/         <span style="color:#6a9955;"># API路由</span>
+│   └── <span style="color:#569cd6;">cli.py</span>             <span style="color:#6a9955;"># 命令行入口</span>
+├── <span style="color:#569cd6;">data/</span>                <span style="color:#6a9955;"># 运行时数据</span>
+│   ├── accounts/           <span style="color:#6a9955;"># 每个账号的 userDataDir</span>
+│   └── xhs_post.db         <span style="color:#6a9955;"># SQLite</span>
+├── <span style="color:#569cd6;">config/</span>
+│   └── settings.yaml       <span style="color:#6a9955;"># 全局配置 + API keys</span>
+└── <span style="color:#569cd6;">requirements.txt</span>
+</pre>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,131 @@
+<h2>系统边界划分 & 集成设计</h2>
+<p class="subtitle">yj_skills（内容生成）→ xhs_post（发布执行）</p>
+
+<div class="section">
+  <h3>两个系统的分工</h3>
+  <div class="mockup">
+    <div class="mockup-header">职责边界</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:12px; font-size:13px;">
+        <div style="flex:1; background:#e8f0fe; padding:14px; border-radius:6px;">
+          <strong style="font-size:15px;">yj_skills（已有，不改）</strong>
+          <p style="color:#666; margin:4px 0;">内容生产方</p>
+          <ul style="margin:8px 0 0 16px;">
+            <li>人设管理（persona-templates.md）</li>
+            <li>选题决策（营销日历 + 内容类型决策树）</li>
+            <li>AI 文案生成（Claude API + 去AI味规则）</li>
+            <li>图片生成（Seedream API text2img/img2img）</li>
+            <li>Hashtag 策略（分层标签库）</li>
+            <li>输出草稿到 <code>drafts/</code> 目录</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#fef7e0; padding:14px; border-radius:6px;">
+          <strong style="font-size:15px;">xhs_post（新建）</strong>
+          <p style="color:#666; margin:4px 0;">发布执行方</p>
+          <ul style="margin:8px 0 0 16px;">
+            <li>读取 <code>drafts/</code> 中的待发内容</li>
+            <li>多账号管理 & 登录态维护</li>
+            <li>Playwright 浏览器自动化发布</li>
+            <li>发布调度 & 并发控制</li>
+            <li>风控策略（反检测/行为拟人化）</li>
+            <li>发布结果回收 & 状态追踪</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据流</h3>
+  <div class="mockup">
+    <div class="mockup-header">端到端流程</div>
+    <div class="mockup-body">
+      <div style="font-size:13px; line-height:2.2;">
+        <div style="background:#e8f0fe; padding:8px 12px; border-radius:4px; margin-bottom:6px;">
+          <strong>① yj_skills 生成</strong><br/>
+          <code>/xiaohongshu-batch 中央半岛 --auto</code><br/>
+          → 输出草稿到 <code>data/中央半岛/xiaohongshu/drafts/20260510_001/</code><br/>
+          → 每篇包含 <code>post.md</code>（标题+正文+标签+元数据）+ <code>images/</code>（封面+内容图）
+        </div>
+        <div style="text-align:center; padding:4px; font-size:18px;">⬇</div>
+        <div style="background:#fef7e0; padding:8px 12px; border-radius:4px; margin-bottom:6px;">
+          <strong>② xhs_post 扫描</strong><br/>
+          调度器定时扫描所有项目的 <code>drafts/</code> 目录<br/>
+          → 发现 <code>status: pending_publish</code> 的草稿<br/>
+          → 匹配对应 account（通过 persona_id 映射）
+        </div>
+        <div style="text-align:center; padding:4px; font-size:18px;">⬇</div>
+        <div style="background:#e6f4ea; padding:8px 12px; border-radius:4px; margin-bottom:6px;">
+          <strong>③ 发布队列</strong><br/>
+          写入 SQLite posts 表，状态 <code>queued</code><br/>
+          → 调度器按账号窗口 + 全局间隔分配发布时间
+        </div>
+        <div style="text-align:center; padding:4px; font-size:18px;">⬇</div>
+        <div style="background:#fce8e6; padding:8px 12px; border-radius:4px; margin-bottom:6px;">
+          <strong>④ Playwright 执行发布</strong><br/>
+          加载账号 BrowserContext → 验证登录态 → 上传图片 → 填写内容 → 提交<br/>
+          → 成功后回收笔记ID，更新 posts 表状态 <code>published</code>
+        </div>
+        <div style="text-align:center; padding:4px; font-size:18px;">⬇</div>
+        <div style="background:#f3e8fd; padding:8px 12px; border-radius:4px;">
+          <strong>⑤ 结果回写</strong><br/>
+          更新 <code>drafts/</code> 中草稿状态 + SQLite 发布记录<br/>
+          → 更新 account <code>last_published</code> 时间
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>草稿格式约定（yj_skills → xhs_post 接口）</h3>
+  <div class="mockup">
+    <div class="mockup-header">post.md 元数据格式（在现有基础上增加发布状态）</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#6a9955;">---</span>
+<span style="color:#9cdcfe;">id:</span> <span style="color:#ce9178;">draft-20260510-001</span>
+<span style="color:#9cdcfe;">project:</span> <span style="color:#ce9178;">中央半岛</span>
+<span style="color:#9cdcfe;">persona_id:</span> <span style="color:#ce9178;">persona-001</span>
+<span style="color:#9cdcfe;">account_id:</span> <span style="color:#ce9178;">account-001</span>
+<span style="color:#9cdcfe;">content_type:</span> <span style="color:#ce9178;">market-analysis</span>
+<span style="color:#9cdcfe;">generated_at:</span> <span style="color:#ce9178;">2026-05-10T08:00:00</span>
+<span style="color:#9cdcfe;">publish_status:</span> <span style="color:#ce9178;">pending</span>         <span style="color:#6a9955;"># ← xhs_post 关注的字段</span>
+<span style="color:#9cdcfe;">scheduled_at:</span> <span style="color:#ce9178;">2026-05-10T20:00:00</span>  <span style="color:#6a9955;"># ← xhs_post 写入</span>
+<span style="color:#9cdcfe;">published_at:</span> <span style="color:#ce9178;"></span>               <span style="color:#6a9955;"># ← xhs_post 回写</span>
+<span style="color:#9cdcfe;">xhs_note_id:</span> <span style="color:#ce9178;"></span>                  <span style="color:#6a9955;"># ← xhs_post 回写</span>
+<span style="color:#6a9955;">---</span>
+</pre>
+      <p style="font-size:12px; color:#666; margin-top:8px;">
+        yj_skills 生成时写入基础元数据，xhs_post 发布后回写 <code>publish_status</code> / <code>published_at</code> / <code>xhs_note_id</code>
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>SQLite 表设计（精简版）</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:13px;">
+    <tr style="background:#f0f4ff;">
+      <th style="padding:6px; border:1px solid #d0d5e0;">表</th>
+      <th style="padding:6px; border:1px solid #d0d5e0;">用途</th>
+      <th style="padding:6px; border:1px solid #d0d5e0;">核心字段</th>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><code>accounts</code></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">运行时账号状态</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">id, account_md_path, login_status, user_data_dir, last_post_at</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><code>publish_logs</code></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">发布记录</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">id, draft_path, account_id, status, xhs_note_id, error_msg, published_at</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><code>publish_queue</code></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">调度队列</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">id, draft_path, account_id, scheduled_at, priority, retry_count</td>
+    </tr>
+  </table>
+</div>

@@ -1,0 +1,78 @@
+<h2>三种架构方案对比</h2>
+<p class="subtitle">小红书自动发布系统 — 20账号 · 房地产垂直 · 全自动AI内容生产</p>
+
+<div class="options" data-multiselect>
+
+<div class="option" data-choice="a" onclick="toggleSelect(this)">
+  <div class="letter">A</div>
+  <div class="content">
+    <h3>方案A：现有 MCP + 管理层封装</h3>
+    <p>基于 <code>xhs-mcp</code> 或 <code>mcp-xiaohongshu</code> 做底层发布，上层自建：账号管理、内容流水线、定时调度</p>
+    <div class="pros-cons">
+      <div class="pros"><h4>优点</h4>
+        <ul>
+          <li>发布能力开箱即用，开发周期短</li>
+          <li>登录/Cookie管理已有现成方案</li>
+          <li>社区持续维护，适配平台变更</li>
+        </ul>
+      </div>
+      <div class="cons"><h4>缺点</h4>
+        <ul>
+          <li>受限于MCP的功能边界，定制困难</li>
+          <li>依赖第三方维护，断更风险</li>
+          <li>多账号支持需自行封装</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="option" data-choice="b" onclick="toggleSelect(this)">
+  <div class="letter">B</div>
+  <div class="content">
+    <h3>方案B：Playwright 全栈自研</h3>
+    <p>基于 Playwright 完全自定义浏览器自动化，自建全部功能模块</p>
+    <div class="pros-cons">
+      <div class="pros"><h4>优点</h4>
+        <ul>
+          <li>完全可控，可处理任意边缘场景</li>
+          <li>多账号隔离天然支持（独立BrowserContext）</li>
+          <li>可定制反检测策略，降低封号风险</li>
+        </ul>
+      </div>
+      <div class="cons"><h4>缺点</h4>
+        <ul>
+          <li>开发工作量大，需处理登录、发布全流程</li>
+          <li>需自行跟进XHS前端DOM变更</li>
+          <li>视频发布实现复杂度高</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="option" data-choice="c" onclick="toggleSelect(this)">
+  <div class="letter">C</div>
+  <div class="content">
+    <h3>方案C：混合架构（推荐）</h3>
+    <p>MCP 做常规发布通道 + Playwright 做兜底和复杂场景，上层统一调度</p>
+    <div class="pros-cons">
+      <div class="pros"><h4>优点</h4>
+        <ul>
+          <li>快速启动 + 长期可控，兼顾速度和灵活性</li>
+          <li>MCP 失效时自动降级到 Playwright</li>
+          <li>可按场景选择最优通道</li>
+        </ul>
+      </div>
+      <div class="cons"><h4>缺点</h4>
+        <ul>
+          <li>需维护两套发布通道</li>
+          <li>架构复杂度略高</li>
+          <li>需要定义清晰的通道抽象接口</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>

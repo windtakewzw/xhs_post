@@ -1,0 +1,141 @@
+<h2>AI 内容生产流水线</h2>
+<p class="subtitle">素材采集 → AI 生成 → 多账号差异化 → 排期入库</p>
+
+<div class="section">
+  <h3>流水线总览</h3>
+  <div class="mockup">
+    <div class="mockup-header">5 阶段流水线</div>
+    <div class="mockup-body">
+      <div style="display:flex; align-items:center; gap:6px; font-size:13px; flex-wrap:wrap;">
+        <div style="background:#e8f0fe; padding:10px 14px; border-radius:6px; text-align:center; min-width:100px;">
+          <strong>① 素材采集</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">官方素材导入<br/>+ 网络补充爬取</p>
+        </div>
+        <span style="font-size:20px;">→</span>
+        <div style="background:#e6f4ea; padding:10px 14px; border-radius:6px; text-align:center; min-width:100px;">
+          <strong>② 内容选题</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">根据楼盘节点<br/>确定发布主题</p>
+        </div>
+        <span style="font-size:20px;">→</span>
+        <div style="background:#fef7e0; padding:10px 14px; border-radius:6px; text-align:center; min-width:100px;">
+          <strong>③ AI 生成</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">标题+正文+话题<br/>Claude API</p>
+        </div>
+        <span style="font-size:20px;">→</span>
+        <div style="background:#fce8e6; padding:10px 14px; border-radius:6px; text-align:center; min-width:100px;">
+          <strong>④ 差异化</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">同楼盘多账号<br/>去重+风格变换</p>
+        </div>
+        <span style="font-size:20px;">→</span>
+        <div style="background:#f3e8fd; padding:10px 14px; border-radius:6px; text-align:center; min-width:100px;">
+          <strong>⑤ 排期入队</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">按发布窗口<br/>写入待发队列</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>① 素材采集</h3>
+  <div class="mockup">
+    <div class="mockup-header">两种来源混合</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:12px;">
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong style="color:#1a73e8;">官方素材（结构化导入）</strong>
+          <ul style="margin:8px 0 0 16px; font-size:13px;">
+            <li>开发商提供的户型图、效果图</li>
+            <li>楼盘基础信息：面积/价格/配套</li>
+            <li>政策文件、促销活动文案</li>
+            <li>导入方式：Web上传 / API接入 / 文件夹监控</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong style="color:#ea4335;">网络采集（补充素材）</strong>
+          <ul style="margin:8px 0 0 16px; font-size:13px;">
+            <li>房产平台数据抓取（房天下/贝壳等）</li>
+            <li>周边配套信息（学校/商圈/交通）</li>
+            <li>区域内竞品楼盘动态</li>
+            <li>本地房产政策新闻</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>②-④ 内容选题 + AI生成 + 差异化</h3>
+  <div class="mockup">
+    <div class="mockup-header">内容类型与生成策略</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0;">内容类型</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">选题来源</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">AI Prompt 要点</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">差异化策略</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">楼盘介绍</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">官方素材</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">突出卖点，口语化表达，避免官方腔</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">不同角度：户型/环境/价格/配套</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">政策解读</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">官方政策文件</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">通俗解读，突出对购房者的利好</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">不同切入点：利率/首付/资格</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">客户引流</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">楼盘活动/节点</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">制造紧迫感，引导私信/预约看房</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">不同CTA：看房团/优惠/限时折扣</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">市场资讯</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">网络采集</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">区域房价走势、购房攻略，树立专业形象</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">不同区域/人群定位</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">实景看房</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">官方图片素材</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">图文搭配，场景化描述</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">不同户型/楼层/朝向</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>内容数据模型</h3>
+  <div class="mockup">
+    <div class="mockup-header">SQLite — posts 表</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#569cd6;">CREATE TABLE</span> posts (
+    id              <span style="color:#4ec9b0;">TEXT PRIMARY KEY</span>,
+    account_id      <span style="color:#4ec9b0;">TEXT NOT NULL</span>,              <span style="color:#6a9955;">-- 发布账号</span>
+    project_id      <span style="color:#4ec9b0;">TEXT NOT NULL</span>,              <span style="color:#6a9955;">-- 所属楼盘</span>
+    content_type    <span style="color:#4ec9b0;">TEXT NOT NULL</span>,              <span style="color:#6a9955;">-- 楼盘介绍/政策解读/客户引流/市场资讯/实景看房</span>
+    title           <span style="color:#4ec9b0;">TEXT NOT NULL</span>,
+    body            <span style="color:#4ec9b0;">TEXT NOT NULL</span>,
+    hashtags        <span style="color:#4ec9b0;">TEXT</span>,                        <span style="color:#6a9955;">-- JSON: ["#楼盘名", "#城市买房", ...]</span>
+    images          <span style="color:#4ec9b0;">TEXT</span>,                        <span style="color:#6a9955;">-- JSON: ["local/path/img1.jpg", ...]</span>
+    ai_prompt_used  <span style="color:#4ec9b0;">TEXT</span>,                        <span style="color:#6a9955;">-- 生成时使用的prompt（调试用）</span>
+    status          <span style="color:#4ec9b0;">TEXT DEFAULT 'draft'</span>,       <span style="color:#6a9955;">-- draft/review/queued/publishing/published/failed</span>
+    scheduled_at    <span style="color:#4ec9b0;">TEXT</span>,                        <span style="color:#6a9955;">-- 计划发布时间</span>
+    published_at    <span style="color:#4ec9b0;">TEXT</span>,
+    xhs_note_id     <span style="color:#4ec9b0;">TEXT</span>,                        <span style="color:#6a9955;">-- 发布后的小红书笔记ID</span>
+    error_msg       <span style="color:#4ec9b0;">TEXT</span>,
+    created_at      <span style="color:#4ec9b0;">TEXT DEFAULT (datetime('now'))</span>
+);
+</pre>
+    </div>
+  </div>
+</div>

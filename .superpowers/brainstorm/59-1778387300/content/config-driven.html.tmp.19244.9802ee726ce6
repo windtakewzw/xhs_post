@@ -1,0 +1,218 @@
+<h2>可配置设计：内容类型 · 人设 · 图片策略</h2>
+<p class="subtitle">三大配置模块，Markdown/YAML 驱动，可随时增改</p>
+
+<div class="section">
+  <h3>配置目录结构</h3>
+  <div class="mockup">
+    <div class="mockup-header">config/ 目录</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#569cd6;">config/</span>
+├── <span style="color:#569cd6;">content-types/</span>        <span style="color:#6a9955;"># 内容类型定义（每类型一个文件）</span>
+│   ├── market-analysis.yaml
+│   ├── area-value.yaml
+│   ├── product-analysis.yaml
+│   ├── buying-guide.yaml
+│   ├── community-life.yaml
+│   ├── home-aesthetics.yaml
+│   ├── family-living.yaml
+│   └── trend-jacking.yaml
+├── <span style="color:#569cd6;">personas/</span>              <span style="color:#6a9955;"># 人设模板</span>
+│   ├── investment-advisor.yaml
+│   ├── lifestyle-advisor.yaml
+│   └── family-advisor.yaml
+├── <span style="color:#569cd6;">image-strategies/</span>      <span style="color:#6a9955;"># 图片生成策略</span>
+│   └── default.yaml
+├── <span style="color:#569cd6;">hashtag-rules.yaml</span>     <span style="color:#6a9955;"># 标签生成规则</span>
+├── <span style="color:#569cd6;">copywriting-rules.yaml</span> <span style="color:#6a9955;"># 文案规则配置</span>
+└── <span style="color:#569cd6;">settings.yaml</span>          <span style="color:#6a9955;"># 全局配置 + API keys</span>
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>① 内容类型配置示例</h3>
+  <div class="mockup">
+    <div class="mockup-header">config/content-types/market-analysis.yaml</div>
+    <div class="mockup-body">
+      <pre style="font-size:11px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px; overflow-x:auto;">
+<span style="color:#6a9955;"># 市场分析内容类型</span>
+<span style="color:#9cdcfe;">id:</span> <span style="color:#ce9178;">market-analysis</span>
+<span style="color:#9cdcfe;">name:</span> <span style="color:#ce9178;">市场分析</span>
+<span style="color:#9cdcfe;">suitable_personas:</span>        <span style="color:#6a9955;"># 适用人设</span>
+<span style="color:#ce9178;">  - investment-advisor</span>
+<span style="color:#9cdcfe;">frequency:</span> <span style="color:#ce9178;">high</span>           <span style="color:#6a9955;"># high / medium / low / instant</span>
+<span style="color:#9cdcfe;">priority:</span> <span style="color:#b5cea8;">5</span>                <span style="color:#6a9955;"># 选题优先级（越大越优先）</span>
+
+<span style="color:#9cdcfe;">prompt:</span>                     <span style="color:#6a9955;"># 文案生成 Prompt 模板</span>
+<span style="color:#9cdcfe;">  system:</span> <span style="color:#ce9178;">|</span>
+<span style="color:#ce9178;">    你是{persona_name}，{persona_role}。</span>
+<span style="color:#ce9178;">    {persona_style}</span>
+<span style="color:#ce9178;">    今天要写一篇市场分析类小红书笔记。</span>
+<span style="color:#ce9178;">    选题方向：{topic}</span>
+<span style="color:#ce9178;">    参考素材：{materials}</span>
+<span style="color:#ce9178;">    </span>
+<span style="color:#ce9178;">    遵循以下规则：</span>
+<span style="color:#ce9178;">    {copywriting_rules}</span>
+<span style="color:#ce9178;">    </span>
+<span style="color:#ce9178;">    输出JSON格式：{"title": "...", "body": "...", "hashtags": [...]}</span>
+
+<span style="color:#9cdcfe;">  few_shot_examples:</span>       <span style="color:#6a9955;"># Few-shot示例（可选）</span>
+<span style="color:#ce9178;">    - example_file: "market-analysis-example-1.md"</span>
+
+<span style="color:#9cdcfe;">image_config:</span>              <span style="color:#6a9955;"># 图片配置</span>
+<span style="color:#9cdcfe;">  count:</span> <span style="color:#b5cea8;">4</span><span style="color:#ce9178;">-5</span>
+<span style="color:#9cdcfe;">  sequence:</span>
+<span style="color:#ce9178;">    - position: 1</span>
+<span style="color:#ce9178;">      type: cover</span>
+<span style="color:#ce9178;">      mode: text2img</span>
+<span style="color:#ce9178;">      description: "数据可视化风格封面"</span>
+<span style="color:#ce9178;">    - position: 2</span>
+<span style="color:#ce9178;">      type: chart</span>
+<span style="color:#ce9178;">      mode: text2img</span>
+<span style="color:#ce9178;">      description: "数据趋势图"</span>
+<span style="color:#ce9178;">    - position: 3</span>
+<span style="color:#ce9178;">      type: project_photo</span>
+<span style="color:#ce9178;">      mode: img2img</span>
+<span style="color:#ce9178;">      description: "项目实景关联"</span>
+<span style="color:#ce9178;">    - position: 4</span>
+<span style="color:#ce9178;">      type: cta</span>
+<span style="color:#ce9178;">      mode: text2img</span>
+<span style="color:#ce9178;">      description: "引导关注/咨询"</span>
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>② 人设配置示例</h3>
+  <div class="mockup">
+    <div class="mockup-header">config/personas/investment-advisor.yaml</div>
+    <div class="mockup-body">
+      <pre style="font-size:11px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px; overflow-x:auto;">
+<span style="color:#9cdcfe;">id:</span> <span style="color:#ce9178;">investment-advisor</span>
+<span style="color:#9cdcfe;">name:</span> <span style="color:#ce9178;">投资置业顾问</span>
+<span style="color:#9cdcfe;">role:</span> <span style="color:#ce9178;">项目资深置业顾问，从业8-12年</span>
+<span style="color:#9cdcfe;">personality:</span>                <span style="color:#6a9955;"># 性格标签</span>
+<span style="color:#ce9178;">  - 理性</span>
+<span style="color:#ce9178;">  - 数据控</span>
+<span style="color:#ce9178;">  - 直言不讳</span>
+<span style="color:#ce9178;">  - 有宏观视野</span>
+<span style="color:#9cdcfe;">expertise:</span>                   <span style="color:#6a9955;"># 专业领域</span>
+<span style="color:#ce9178;">  - 房产投资分析</span>
+<span style="color:#ce9178;">  - 区域价值研判</span>
+<span style="color:#ce9178;">  - 资产配置</span>
+
+<span style="color:#9cdcfe;">style:</span>                       <span style="color:#6a9955;"># 写作风格</span>
+<span style="color:#9cdcfe;">  tone:</span> <span style="color:#ce9178;">理性自信，不制造焦虑，用事实说服</span>
+<span style="color:#9cdcfe;">  phrases:</span>                    <span style="color:#6a9955;"># 口头禅/常用句式</span>
+<span style="color:#ce9178;">    - "用数据说话..."</span>
+<span style="color:#ce9178;">    - "算笔账你就明白了..."</span>
+<span style="color:#ce9178;">    - "说实话，这个板块的潜力被低估了..."</span>
+<span style="color:#9cdcfe;">  avoid:</span>                      <span style="color:#6a9955;"># 避免的写法</span>
+<span style="color:#ce9178;">    - 过于技术化</span>
+<span style="color:#ce9178;">    - 堆砌术语</span>
+<span style="color:#ce9178;">    - 制造焦虑</span>
+
+<span style="color:#9cdcfe;">visual:</span>                      <span style="color:#6a9955;"># 视觉风格</span>
+<span style="color:#9cdcfe;">  colors:</span> <span style="color:#ce9178;">[navy, silver, white, blue-gray]</span>
+<span style="color:#9cdcfe;">  lighting:</span> <span style="color:#ce9178;">"bright, clean, professional"</span>
+<span style="color:#9cdcfe;">  atmosphere:</span> <span style="color:#ce9178;">"confident, authoritative"</span>
+
+<span style="color:#9cdcfe;">content:</span>                     <span style="color:#6a9955;"># 内容策略</span>
+<span style="color:#9cdcfe;">  distribution:</span>              <span style="color:#6a9955;"># 内容占比</span>
+<span style="color:#ce9178;">    market-analysis: 0.30</span>
+<span style="color:#ce9178;">    area-value: 0.25</span>
+<span style="color:#ce9178;">    product-analysis: 0.25</span>
+<span style="color:#ce9178;">    buying-guide: 0.20</span>
+
+<span style="color:#9cdcfe;">taboos:</span>                       <span style="color:#6a9955;"># 内容禁忌</span>
+<span style="color:#ce9178;">  - 不夸大投资回报</span>
+<span style="color:#ce9178;">  - 不做保底承诺</span>
+<span style="color:#ce9178;">  - 数据需注明来源</span>
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>③ 图片策略配置示例</h3>
+  <div class="mockup">
+    <div class="mockup-header">config/image-strategies/default.yaml</div>
+    <div class="mockup-body">
+      <pre style="font-size:11px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px; overflow-x:auto;">
+<span style="color:#9cdcfe;">api:</span>                          <span style="color:#6a9955;"># 图片生成API配置</span>
+<span style="color:#9cdcfe;">  provider:</span> <span style="color:#ce9178;">seedream</span>       <span style="color:#6a9955;"># seedream / openai / etc.</span>
+<span style="color:#9cdcfe;">  model:</span> <span style="color:#ce9178;">seedream-5.0-lite</span>
+<span style="color:#9cdcfe;">  size:</span> <span style="color:#ce9178;">2304x4096</span>          <span style="color:#6a9955;"># 小红书9:16竖屏</span>
+<span style="color:#9cdcfe;">  endpoint:</span> <span style="color:#ce9178;">https://ark.cn-beijing.volces.com/api/v3/images/generations</span>
+
+<span style="color:#9cdcfe;">decision_matrix:</span>             <span style="color:#6a9955;"># 生图模式决策</span>
+<span style="color:#ce9178;">  - when: has_real_photos</span>
+<span style="color:#ce9178;">    mode: img2img</span>
+<span style="color:#ce9178;">    strength: 0.35</span>
+<span style="color:#ce9178;">    label: none</span>
+<span style="color:#ce9178;">  - when: has_renders_only</span>
+<span style="color:#ce9178;">    mode: img2img</span>
+<span style="color:#ce9178;">    strength: 0.45</span>
+<span style="color:#ce9178;">    label: "效果图仅供参考"</span>
+<span style="color:#ce9178;">  - when: no_media</span>
+<span style="color:#ce9178;">    mode: text2img</span>
+<span style="color:#ce9178;">    label: "概念示意图，以实际为准"</span>
+<span style="color:#ce9178;">  - when: cover_or_infocard</span>
+<span style="color:#ce9178;">    mode: text2img</span>
+<span style="color:#ce9178;">    label: none</span>
+
+<span style="color:#9cdcfe;">prompt_templates:</span>            <span style="color:#6a9955;"># Prompt 模板</span>
+<span style="color:#9cdcfe;">  text2img:</span> <span style="color:#ce9178;">|</span>
+<span style="color:#ce9178;">    A real estate social media {image_type} for Xiaohongshu.</span>
+<span style="color:#ce9178;">    The image features {visual_elements}, with {auxiliary_elements}.</span>
+<span style="color:#ce9178;">    Color palette: {persona_colors}.</span>
+<span style="color:#ce9178;">    Lighting: {persona_lighting}.</span>
+<span style="color:#ce9178;">    Atmosphere: {persona_atmosphere}.</span>
+<span style="color:#ce9178;">    Clean modern design, vertical 9:16 format,</span>
+<span style="color:#ce9178;">    no text overlay, no QR code, no watermarks.</span>
+<span style="color:#9cdcfe;">  img2img:</span> <span style="color:#ce9178;">|</span>
+<span style="color:#ce9178;">    Real estate property photo, {scene_type}.</span>
+<span style="color:#ce9178;">    Keep the original architecture. Enhance {enhance_aspects}.</span>
+<span style="color:#ce9178;">    Color tone: {persona_colors}, {persona_lighting}.</span>
+<span style="color:#ce9178;">    Maintain architectural accuracy, realistic style.</span>
+
+<span style="color:#9cdcfe;">negative_prompt:</span> <span style="color:#ce9178;">|</span>
+<span style="color:#ce9178;">  text overlay, watermarks, QR codes, phone numbers, logos,</span>
+<span style="color:#ce9178;">  distorted architecture, unrealistic proportions, blurry,</span>
+<span style="color:#ce9178;">  cartoon, illustration, 3D render style, overly saturated</span>
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>增改流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">无需改代码</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:12px; font-size:13px;">
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong>新增内容类型</strong>
+          <ol style="margin:8px 0 0 16px;">
+            <li>在 <code>config/content-types/</code> 下新建一个 YAML 文件</li>
+            <li>定义 prompt、image_config、suitable_personas</li>
+            <li>在人设配置中更新 <code>content.distribution</code> 占比</li>
+            <li>重启服务，自动加载</li>
+          </ol>
+        </div>
+        <div style="flex:1; background:#f8f9fc; padding:12px; border-radius:6px;">
+          <strong>新增人设类型</strong>
+          <ol style="margin:8px 0 0 16px;">
+            <li>在 <code>config/personas/</code> 下新建 YAML</li>
+            <li>定义 style、visual、content、taboos</li>
+            <li>在项目 <code>data/</code> 目录下创建对应 persona-*.md</li>
+            <li>绑定到 account-*.md</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

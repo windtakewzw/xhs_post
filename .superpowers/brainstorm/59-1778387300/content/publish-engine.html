@@ -1,0 +1,134 @@
+<h2>发布引擎设计</h2>
+<p class="subtitle">Playwright 浏览器自动化 · 任务调度 · 多账号并发</p>
+
+<div class="section">
+  <h3>整体架构</h3>
+  <div class="mockup">
+    <div class="mockup-header">发布流水线</div>
+    <div class="mockup-body">
+      <div style="display:flex; align-items:center; gap:8px; font-size:13px; flex-wrap:wrap;">
+        <div style="background:#e8f0fe; padding:10px 12px; border-radius:6px; text-align:center; min-width:90px;">
+          <strong>调度器</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">定时扫描<br/>待发队列</p>
+        </div>
+        <span>→</span>
+        <div style="background:#e6f4ea; padding:10px 12px; border-radius:6px; text-align:center; min-width:90px;">
+          <strong>任务分发</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">账号并发控制<br/>时间窗口检查</p>
+        </div>
+        <span>→</span>
+        <div style="background:#fef7e0; padding:10px 12px; border-radius:6px; text-align:center; min-width:90px;">
+          <strong>Publisher</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">Playwright<br/>浏览器自动化</p>
+        </div>
+        <span>→</span>
+        <div style="background:#fce8e6; padding:10px 12px; border-radius:6px; text-align:center; min-width:90px;">
+          <strong>结果回调</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">更新状态<br/>记录笔记ID</p>
+        </div>
+        <span>→</span>
+        <div style="background:#f3e8fd; padding:10px 12px; border-radius:6px; text-align:center; min-width:90px;">
+          <strong>异常处理</strong>
+          <p style="margin:4px 0 0; font-size:11px; color:#666;">重试/降级<br/>告警通知</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Playwright 发布流程</h3>
+  <div class="mockup">
+    <div class="mockup-header">单次发布步骤</div>
+    <div class="mockup-body">
+      <ol style="font-size:13px; line-height:2;">
+        <li><strong>创建 BrowserContext</strong> — 加载账号专属 userDataDir（含持久化Cookie）</li>
+        <li><strong>验证登录态</strong> — 访问小红书首页，检测是否已登录；失效则标记 expired</li>
+        <li><strong>进入创作者中心</strong> — 导航到发布页面（处理DOM等待、弹窗关闭）</li>
+        <li><strong>上传图片</strong> — 通过文件选择器上传配图（小红书最多18张，房产内容建议3-9张）</li>
+        <li><strong>填写标题</strong> — 逐字输入（模拟打字，避免反爬），最多20字</li>
+        <li><strong>填写正文</strong> — 分段粘贴，带emoji和换行</li>
+        <li><strong>添加话题标签</strong> — 逐个添加，利用平台推荐标签</li>
+        <li><strong>设置可见性/位置</strong> — 公开/私密，可选添加地点标签（楼盘位置）</li>
+        <li><strong>提交发布</strong> — 点击发布按钮，等待成功回调</li>
+        <li><strong>回收笔记ID</strong> — 从页面响应/URL中提取新笔记ID，写入数据库</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>调度策略</h3>
+  <div class="mockup">
+    <div class="mockup-header">20个账号的发布节奏</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0;">参数</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">值</th>
+          <th style="padding:8px; border:1px solid #d0d5e0;">说明</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">每账号频率</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">1篇 / 1-2天</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">20个账号 ≈ 日均10-15篇发布量</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">发布窗口</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">8:00-22:00</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">每个账号设定自己的最佳时段</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">并发上限</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">最多3个 Browser 同时运行</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">避免资源过载 + 降低同一IP并发特征</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">发布间隔</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">至少 15 分钟</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">无论是否同账号，全局最小间隔</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">同账号间隔</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">至少 24 小时</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">避免单账号短时间高频发布</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0;">同楼盘去重</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">3天内不重复主题</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">同楼盘3-5个账号错开发布主题</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>技术实现要点</h3>
+  <div class="mockup">
+    <div class="mockup-header">Playwright 关键配置</div>
+    <div class="mockup-body">
+      <pre style="font-size:12px; background:#1e1e1e; color:#d4d4d4; padding:12px; border-radius:6px;">
+<span style="color:#6a9955;"># 每个账号独立的持久化上下文</span>
+context = <span style="color:#dcdcaa;">await</span> browser.new_context(
+    storage_state=<span style="color:#ce9178;">f"data/accounts/{account_id}/state.json"</span>,
+    user_agent=<span style="color:#ce9178;">"真实的Chrome UA"</span>,
+    viewport={<span style="color:#ce9178;">"width"</span>: <span style="color:#b5cea8;">390</span>, <span style="color:#ce9178;">"height"</span>: <span style="color:#b5cea8;">844</span>},     <span style="color:#6a9955;"># iPhone 14 尺寸，模拟移动端</span>
+    device_scale_factor=<span style="color:#b5cea8;">3</span>,
+    is_mobile=<span style="color:#569cd6;">True</span>,
+    has_touch=<span style="color:#569cd6;">True</span>,
+    locale=<span style="color:#ce9178;">"zh-CN"</span>,
+    timezone_id=<span style="color:#ce9178;">"Asia/Shanghai"</span>,
+)
+
+<span style="color:#6a9955;"># 反检测脚本注入</span>
+<span style="color:#dcdcaa;">await</span> context.add_init_script(<span style="color:#ce9178;">"""
+    // 隐藏 webdriver 特征
+    Object.defineProperty(navigator, 'webdriver', {get: () => false});
+    // 注入真实的 chrome 对象
+    window.chrome = { runtime: {} };
+"""</span>)
+</pre>
+    </div>
+  </div>
+</div>

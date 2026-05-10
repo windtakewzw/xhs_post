@@ -1,0 +1,139 @@
+<h2>内容生产流水线 v2 — 对接现有素材目录</h2>
+<p class="subtitle">基于 <code>D:\project\yj_skills\data\</code> 的目录结构设计</p>
+
+<div class="section">
+  <h3>数据源：现有目录 vs 系统数据库 分工</h3>
+  <div class="mockup">
+    <div class="mockup-header">关注点分离</div>
+    <div class="mockup-body">
+      <div style="display:flex; gap:12px; font-size:13px;">
+        <div style="flex:1; background:#e8f0fe; padding:14px; border-radius:6px;">
+          <strong style="font-size:15px;">文件系统（已有的）</strong>
+          <p style="color:#666; margin:4px 0;">只读 · 由你维护</p>
+          <ul style="margin:8px 0 0 16px;">
+            <li><code>accounts/*.md</code> — 账号定义 + 人设绑定</li>
+            <li><code>personas/*.md</code> — 人设、风格、内容策略</li>
+            <li><code>楼盘简介/</code> — 项目概况、亮点</li>
+            <li><code>销售说辞/</code> — 核心卖点话术</li>
+            <li><code>户型清单/</code> — 户型信息</li>
+            <li><code>楼盘参数/</code> — 技术指标</li>
+            <li><code>百问百答/</code> — 常见问题</li>
+            <li><code>抗性说辞/</code> — 异议应对</li>
+            <li><code>客户画像要点/</code> — 客群画像</li>
+            <li><code>营销日历.md</code> — 全年热点日历</li>
+            <li><code>media/</code> — 图片素材</li>
+          </ul>
+        </div>
+        <div style="flex:1; background:#fef7e0; padding:14px; border-radius:6px;">
+          <strong style="font-size:15px;">SQLite（系统管理）</strong>
+          <p style="color:#666; margin:4px 0;">读写 · 运行时状态</p>
+          <ul style="margin:8px 0 0 16px;">
+            <li>Cookie / 登录态持久化路径</li>
+            <li>发布队列 + 调度排期</li>
+            <li>已发布记录 + 笔记ID</li>
+            <li>发布日志 / 错误记录</li>
+            <li>账号状态跟踪（active/expired/blocked）</li>
+            <li>互动数据回收（点赞/收藏/评论）</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>内容生成流程 — 从素材到待发</h3>
+  <div class="mockup">
+    <div class="mockup-header">单篇内容生成过程</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr style="background:#f0f4ff;">
+          <th style="padding:8px; border:1px solid #d0d5e0; width:5%;">步</th>
+          <th style="padding:8px; border:1px solid #d0d5e0; width:18%;">阶段</th>
+          <th style="padding:8px; border:1px solid #d0d5e0; width:35%;">输入</th>
+          <th style="padding:8px; border:1px solid #d0d5e0; width:42%;">处理</th>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">1</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>读取配置</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            <code>account-*.md</code> → <code>persona-*.md</code>
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">解析 YAML，加载人设、风格、内容策略、标签池</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">2</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>选题决策</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            营销日历.md + 当前日期 + 项目特性 + 内容轮换策略
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">根据日历热点 + persona内容比例，决定今天发什么类型</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">3</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>素材加载</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            项目概况 + 销售说辞 + 户型清单 + 百问百答 + 图片素材
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">按选题类型加载对应素材文件，构建 AI Prompt 上下文</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">4</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>AI 生成</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            Prompt = 人设设定 + 选题 + 素材 + 风格要求 + 禁忌
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">Claude API 生成标题+正文+话题标签，遵循人设风格和内容禁忌</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">5</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>图片匹配</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            生成内容主题 + media/ 目录 + persona视觉偏好
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">从素材库匹配/生成配图，遵循人设的色调和排版风格</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">6</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>同项目去重</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            同一楼盘其他账号近期已发内容
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">检查相似度，确保同项目3-5个账号内容不撞车</td>
+        </tr>
+        <tr>
+          <td style="padding:8px; border:1px solid #d0d5e0; text-align:center;">7</td>
+          <td style="padding:8px; border:1px solid #d0d5e0;"><strong>排期入库</strong></td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">
+            账号发布窗口 + 每日限额 + 已有排期
+          </td>
+          <td style="padding:8px; border:1px solid #d0d5e0;">写入 posts 表，状态 = queued，等待发布引擎调度</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>关键设计决策</h3>
+  <table style="width:100%; border-collapse:collapse; font-size:13px;">
+    <tr>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#e6f4ea;">
+        <strong>素材目录作为唯一真相源</strong><br/>
+        <span style="font-size:12px; color:#555;">系统直接从文件系统读取，不做数据导入。你更新 Markdown 后下次生成自动生效</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#e6f4ea;">
+        <strong>SQLite 只存运行时状态</strong><br/>
+        <span style="font-size:12px; color:#555;">不复制素材内容，只存发布队列、历史、Cookie、日志等运行时数据</span>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#e6f4ea;">
+        <strong>完整 Prompt 上下文</strong><br/>
+        <span style="font-size:12px; color:#555;">每篇内容生成时，AI 会收到：人设卡 + 项目素材 + 营销日历热点 + 历史去重 + 风格禁忌，确保输出质量</span>
+      </td>
+    </tr>
+  </table>
+</div>

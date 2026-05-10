@@ -1,0 +1,118 @@
+<h2>系统整体架构</h2>
+<p class="subtitle">小红书自动发布系统 — Playwright 全栈自研方案</p>
+
+<div class="section">
+  <h3>六大核心模块</h3>
+  <div class="mockup">
+    <div class="mockup-header">Architecture Overview</div>
+    <div class="mockup-body">
+      <table style="width:100%; border-collapse: collapse; font-size: 14px;">
+        <tr style="background: #f0f4ff;">
+          <td style="padding:10px; border:1px solid #d0d5e0; width:50%; vertical-align:top;">
+            <strong style="font-size:16px;">📋 管理层</strong>
+            <div style="margin-top:8px;">
+              <div class="mock-button" style="margin:2px; display:inline-block;">Web Dashboard</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">CLI 工具</div>
+            </div>
+            <p style="font-size:12px; color:#666; margin-top:4px;">账号管理 · 内容审核 · 发布日历 · 数据看板</p>
+          </td>
+          <td style="padding:10px; border:1px solid #d0d5e0; width:50%; vertical-align:top;">
+            <strong style="font-size:16px;">🤖 AI 内容引擎</strong>
+            <div style="margin-top:8px;">
+              <div class="mock-button" style="margin:2px; display:inline-block;">选题规划</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">文案生成</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">图片处理</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">话题标签</div>
+            </div>
+            <p style="font-size:12px; color:#666; margin-top:4px;">素材采集 → 二次创作 → 多账号差异化 → 排期入库</p>
+          </td>
+        </tr>
+        <tr style="background: #f8f9fc;">
+          <td style="padding:10px; border:1px solid #d0d5e0; vertical-align:top;">
+            <strong style="font-size:16px;">🚀 发布引擎</strong>
+            <div style="margin-top:8px;">
+              <div class="mock-button" style="margin:2px; display:inline-block;">任务队列</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">Playwright Worker</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">重试机制</div>
+            </div>
+            <p style="font-size:12px; color:#666; margin-top:4px;">定时调度 · 并发控制 · 行为模拟 · 结果回调</p>
+          </td>
+          <td style="padding:10px; border:1px solid #d0d5e0; vertical-align:top;">
+            <strong style="font-size:16px;">🛡 风控模块</strong>
+            <div style="margin-top:8px;">
+              <div class="mock-button" style="margin:2px; display:inline-block;">浏览器指纹</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">行为拟人化</div>
+              <div class="mock-button" style="margin:2px; display:inline-block;">限流熔断</div>
+            </div>
+            <p style="font-size:12px; color:#666; margin-top:4px;">独立BrowserContext · 随机延迟 · 验证码检测 · 异常告警</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>数据层</h3>
+  <table style="width:100%; border-collapse: collapse; font-size:14px;">
+    <tr>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#fafafa;">
+        <strong>账号库</strong><br/>
+        <span style="font-size:12px; color:#666;">Cookie · 登录态 · 指纹配置 · 所属楼盘</span>
+      </td>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#fafafa;">
+        <strong>素材库</strong><br/>
+        <span style="font-size:12px; color:#666;">楼盘图片 · 户型图 · 政策文案 · 模板</span>
+      </td>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#fafafa;">
+        <strong>内容库</strong><br/>
+        <span style="font-size:12px; color:#666;">待发队列 · 已发记录 · AI生成草稿</span>
+      </td>
+      <td style="padding:8px; border:1px solid #d0d5e0; background:#fafafa;">
+        <strong>日志库</strong><br/>
+        <span style="font-size:12px; color:#666;">发布记录 · 互动数据 · 异常日志</span>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="section">
+  <h3>关键技术选型建议</h3>
+  <table style="width:100%; border-collapse: collapse; font-size:13px;">
+    <tr style="background:#f0f4ff;">
+      <th style="padding:6px; border:1px solid #d0d5e0; text-align:left;">层</th>
+      <th style="padding:6px; border:1px solid #d0d5e0; text-align:left;">推荐</th>
+      <th style="padding:6px; border:1px solid #d0d5e0; text-align:left;">理由</th>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">语言</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>TypeScript / Node.js</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">Playwright 原生支持，异步IO适合并发发布</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">浏览器自动化</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>Playwright</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">已安装插件，多BrowserContext隔离账号</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">数据库</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>SQLite (开发) / PostgreSQL (生产)</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">轻量起步，后期可切换</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">任务队列</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>BullMQ + Redis</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">支持定时、重试、优先级、并发控制</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">管理界面</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>Web Dashboard (React)</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">账号管理、内容审核、发布日历可视化</td>
+    </tr>
+    <tr>
+      <td style="padding:6px; border:1px solid #d0d5e0;">AI 能力</td>
+      <td style="padding:6px; border:1px solid #d0d5e0;"><strong>Claude API / 通义千问</strong></td>
+      <td style="padding:6px; border:1px solid #d0d5e0;">文案生成、标题优化、话题推荐</td>
+    </tr>
+  </table>
+</div>
