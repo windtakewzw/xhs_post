@@ -2,7 +2,7 @@ accounts:
   - id: account-001
     persona: 老王
     persona_type: investment-advisor
-    user_data_dir: data/accounts/account-001/
+    user_data_dir: accounts/account-001/
     login_status: active
     last_published_at: 2026-05-10T17:30:00
     daily_limit: 1
@@ -13,7 +13,7 @@ accounts:
   - id: account-002
     persona: 小陈
     persona_type: lifestyle-advisor
-    user_data_dir: data/accounts/account-002/
+    user_data_dir: accounts/account-002/
     login_status: active
     last_published_at:
     daily_limit: 1
@@ -24,7 +24,7 @@ accounts:
   - id: account-003
     persona: 阿芳
     persona_type: family-advisor
-    user_data_dir: data/accounts/account-003/
+    user_data_dir: accounts/account-003/
     login_status: active
     last_published_at:
     daily_limit: 1

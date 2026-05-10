@@ -22,7 +22,7 @@ def reply(args):
         print(f"ERROR: account {args.account_id} not found")
         sys.exit(1)
 
-    state_file = os.path.join(account.get("user_data_dir", f"data/accounts/{args.account_id}/"), "state.json")
+    state_file = os.path.join(account.get("user_data_dir", f"accounts/{args.account_id}/"), "state.json")
 
     try:
         with sync_playwright() as pw:
