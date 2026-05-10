@@ -21,6 +21,27 @@ def log(msg): print(f"[publisher] {msg}", flush=True)
 def rand_delay(lo=0.5, hi=1.5):
     time.sleep(random.uniform(lo, hi))
 
+# Creator center sidebar menus to randomly browse for anti-detection
+SIDEBAR_MENUS = ["首页", "笔记管理", "数据看板", "活动中心", "笔记灵感", "创作学院", "创作百科"]
+
+def random_browse(page, count=2):
+    """Randomly click a few sidebar menus to simulate human browsing."""
+    menus = random.sample(SIDEBAR_MENUS, min(count, len(SIDEBAR_MENUS)))
+    for menu in menus:
+        log(f"  浏览: {menu}")
+        clicked = page.evaluate(f"""(m) => {{
+            for (const el of document.querySelectorAll('*')) {{
+                if (el.innerText && el.innerText.trim() === m && el.offsetParent) {{
+                    el.click(); return true;
+                }}
+            }}
+            return false;
+        }}""", menu)
+        if clicked:
+            rand_delay(3, 8)  # Simulate reading time
+        else:
+            rand_delay(1, 2)
+
 
 def human_type(page, text: str, per_char_delay=(60, 180)):
     """Type character by character with random delays."""
@@ -108,6 +129,12 @@ def publish(args):
             sys.exit(EXIT_LOGIN_EXPIRED)
         log("已登录")
 
+        # === Random browse before publishing ===
+        log("反检测: 随机浏览创作者中心...")
+        random_browse(page, count=random.randint(2, 4))
+        page.goto("https://creator.xiaohongshu.com/publish/publish", wait_until="networkidle", timeout=30000)
+        rand_delay(2, 3)
+
         # === Step 2: Click "上传图文" tab ===
         log("Step 2: 切换到上传图文...")
         clicked = page.evaluate("""() => {
@@ -147,106 +174,121 @@ def publish(args):
         # === Step 4: Fill title ===
         log(f"Step 4: 填写标题...")
         rand_delay(1, 2)
-        # The title is usually a contenteditable or input at the top of the editor
-        title_selectors = [
-            '[placeholder*="标题"]',
-            '.title-input',
-            '[class*="title"] [contenteditable]',
-            '[contenteditable="true"]',
-        ]
-        title_el = None
-        for sel in title_selectors:
-            el = page.locator(sel).first
-            if el.count() and el.is_visible(timeout=2000):
-                title_el = el
-                break
-
-        if title_el:
+        # Actual element: <INPUT class='d-text' placeholder='填写标题会有更多赞哦'>
+        title_el = page.locator('input.d-text').first
+        if not title_el.count():
+            title_el = page.locator('[placeholder*="填写标题"]').first
+        if title_el.count():
             human_click(page, title_el)
+            title_el.fill("")  # Clear existing text
             human_type(page, post["title"][:20])
             log(f"标题已填写: {post['title'][:30]}")
         else:
-            log("WARN: 未找到标题输入框，尝试键盘输入...")
-            page.keyboard.press("Tab")
-            rand_delay(0.3, 0.5)
-            human_type(page, post["title"][:20])
+            log("WARN: 未找到标题输入框")
 
         # === Step 5: Fill body ===
         log("Step 5: 填写正文...")
         rand_delay(1, 2)
-        body_selectors = [
-            '[placeholder*="正文"]',
-            '[contenteditable="true"]',
-            '[class*="editor"] [contenteditable]',
-            '[class*="body"] [contenteditable]',
-            'textarea',
-        ]
-        body_el = None
-        for sel in body_selectors:
-            el = page.locator(sel).first
-            if el.count() and el.is_visible(timeout=2000):
-                body_el = el
-                break
+        # Actual element: <DIV class='tiptap ProseMirror' contenteditable>
+        body_el = page.locator('div.tiptap').first
+        if not body_el.count():
+            body_el = page.locator('div.ProseMirror').first
+        if not body_el.count():
+            body_el = page.locator('[contenteditable="true"]').first
 
-        if body_el:
+        if body_el.count():
             human_click(page, body_el)
             body_text = post["body"]
             segments = [s.strip() for s in body_text.split('\n') if s.strip()]
             if segments:
                 first = segments[0]
-                if len(first) > 15:
-                    human_type(page, first[:12], per_char_delay=(40, 100))
-                    page.keyboard.insert_text(first[12:])
-                else:
-                    human_type(page, first, per_char_delay=(40, 100))
+                human_type(page, first[:10], per_char_delay=(40, 100))
+                page.keyboard.insert_text(first[10:])
                 page.keyboard.press("Enter")
                 rand_delay(0.3, 0.6)
                 for seg in segments[1:]:
                     page.keyboard.insert_text(seg)
                     page.keyboard.press("Enter")
-                    rand_delay(0.3, 0.6)
+                    rand_delay(0.2, 0.4)
             log("正文已填写")
         else:
-            log("WARN: 未找到正文输入框，尝试insert...")
-            page.keyboard.insert_text(post["body"])
+            log("WARN: 未找到正文编辑器")
 
         # === Step 6: Add tags ===
         if post.get("hashtags"):
             log(f"Step 6: 添加标签...")
             rand_delay(1, 2)
-            # Look for tag input or type #tags in body
-            tag_el = page.locator('[placeholder*="标签"], [placeholder*="话题"]').first
-            if tag_el.count() and tag_el.is_visible(timeout=2000):
-                human_click(page, tag_el)
-                for tag in post["hashtags"]:
-                    human_type(page, tag + " ")
-                    rand_delay(0.3, 0.8)
-                    page.keyboard.press("Enter")
-            elif body_el:
-                human_click(page, body_el)
-                page.keyboard.press("End")
+            # Click "话题" button first to open tag input
+            tag_btn = page.locator('.topic-btn').first
+            if not tag_btn.count():
+                tag_btn = page.locator('button').filter(has_text="话题").first
+            if tag_btn.count():
+                human_click(page, tag_btn)
+                rand_delay(1, 2)
+            # Type tags in the input that appears
+            for tag in post["hashtags"]:
+                page.keyboard.insert_text(tag)
+                rand_delay(0.5, 1)
                 page.keyboard.press("Enter")
-                page.keyboard.press("Enter")
-                for tag in post["hashtags"]:
-                    human_type(page, tag + " ")
+                rand_delay(0.3, 0.5)
             log("标签已添加")
 
         rand_delay(2, 3)
 
         # === Step 7: Publish ===
         log("Step 7: 点击发布...")
-        # Find publish button - avoid Chinese in CSS pseudo-selectors
-        publish_btn = page.locator('button').filter(has_text="发布").first
+        publish_btn = page.locator('button.d-button').filter(has_text="发布").first
         if not publish_btn.count():
-            publish_btn = page.locator('[class*="publish"]').first
-        if not publish_btn.count():
-            publish_btn = page.locator('text=发布').first
+            publish_btn = page.locator('button').filter(has_text="发布").first
         if publish_btn.count():
             human_click(page, publish_btn)
-            rand_delay(3, 5)
+            rand_delay(5, 8)
             log("已点击发布")
         else:
             log("WARN: 未找到发布按钮")
+
+        # === Step 8: Collect note ID from profile page ===
+        log("Step 8: 获取笔记ID...")
+        note_id = ""
+        # Try to get user profile URL from current page first
+        user_link = page.evaluate("""() => {
+            const links = document.querySelectorAll('a[href*="/user/profile/"]');
+            for (const l of links) {
+                const href = l.href || '';
+                const m = href.match(/\\/user\\/profile\\/([a-f0-9]+)/);
+                if (m) return m[1];
+            }
+            return '';
+        }""")
+
+        if user_link:
+            page.goto(f"https://www.xiaohongshu.com/user/profile/{user_link}", wait_until="networkidle", timeout=30000)
+        else:
+            page.goto("https://www.xiaohongshu.com/explore", wait_until="networkidle", timeout=30000)
+            rand_delay(2, 4)
+            page.goto(f"https://www.xiaohongshu.com/user/profile/5f3a4b050000000001006d74", wait_until="networkidle", timeout=30000)
+
+        rand_delay(3, 5)
+        # Extract the most recent note link
+        note_id = page.evaluate("""() => {
+            const links = document.querySelectorAll('a[href*="/explore/"]');
+            for (const link of links) {
+                const href = link.href || '';
+                // Skip non-note explore links (homefeed etc)
+                if (href.includes('channel_id') || href.includes('channel_type')) continue;
+                const m = href.match(/\\/explore\\/([a-f0-9]+)/);
+                if (m && m[1].length > 10) return m[1];
+            }
+            return '';
+        }""")
+        if note_id:
+            log(f"笔记ID: {note_id}")
+        else:
+            log("WARN: 无法自动提取笔记ID")
+
+        # === Random browse after publishing ===
+        log("反检测: 发布后随机浏览...")
+        random_browse(page, count=random.randint(1, 2))
 
         # Save state
         context.storage_state(path=state_file)
