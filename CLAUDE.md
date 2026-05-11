@@ -11,12 +11,13 @@ xhs_post 是一个小红书内容发布系统，面向房地产项目。以 Clau
 ```
 skills/
 ├── xhs-generate/     # 内容生成（读规则 → 写文案 → 生图）
-├── xhs-publish/      # 发布引擎（Playwright 浏览器自动化） [待建]
-├── xhs-monitor/      # 评论监控 [待建]
-└── xhs-reply/        # 评论回复 [待建]
+├── xhs-publish/      # 发布引擎（Playwright 浏览器自动化）
+├── xhs-monitor/      # 评论监控
+└── xhs-reply/        # 评论回复
 
 rules/                # Markdown 规则文件（Claude 直接读写）
 data/                 # 运行时数据（草稿、账号配置）
+accounts/             # 浏览器登录态持久化
 ```
 
 上游设计参考在 `D:\project\yj_skills\skills\xiaohongshu\references\`。

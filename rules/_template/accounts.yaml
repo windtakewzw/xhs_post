@@ -1,0 +1,26 @@
+# accounts.yaml 模板
+# 生成时替换 {{ }} 占位符为实际值
+# Claude 通过对话确认每个人设绑定的账号后填入
+
+accounts:
+  - id: {{人设1账号ID}}
+    persona: {{人设1姓名}}
+    persona_type: {{人设1类型}}
+    user_data_dir: accounts/{{人设1账号ID}}/
+    login_status: inactive
+    last_published_at:
+    daily_limit: 1
+    preferred_window:
+      start: "09:00"
+      end: "21:00"
+
+  - id: {{人设2账号ID}}
+    persona: {{人设2姓名}}
+    persona_type: {{人设2类型}}
+    user_data_dir: accounts/{{人设2账号ID}}/
+    login_status: inactive
+    last_published_at:
+    daily_limit: 1
+    preferred_window:
+      start: "09:00"
+      end: "21:00"

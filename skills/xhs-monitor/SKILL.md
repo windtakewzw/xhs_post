@@ -15,7 +15,7 @@ description: Use when monitoring comments on published Xiaohongshu posts, checki
 ## 数据来源
 
 - 发布索引：`data/{项目}/drafts/index.md` → 查找所有 `status: published` 的笔记及其 `xhs_note_id`
-- 账号配置：`data/{项目}/accounts.yaml` → 获取可用的活跃账号
+- 账号配置：`rules/{项目}/accounts.yaml` → 获取可用的活跃账号
 
 ## 监控流程
 
@@ -26,7 +26,7 @@ description: Use when monitoring comments on published Xiaohongshu posts, checki
 source venv/Scripts/activate && python skills/xhs-monitor/scripts/fetcher.py \
   --note-id {xhs_note_id} \
   --account-id {账号ID} \
-  --accounts-config data/{项目}/accounts.yaml \
+  --accounts-config rules/{项目}/accounts.yaml \
   --project {项目名}
 ```
 

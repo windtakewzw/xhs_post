@@ -16,12 +16,12 @@ description: Use when publishing Xiaohongshu drafts via browser automation, chec
 ## 数据来源
 
 - 草稿索引：`data/{项目}/drafts/index.md`（xhs-generate 生成）
-- 账号配置：`data/{项目}/accounts.yaml`
+- 账号配置：`rules/{项目}/accounts.yaml`
 
 ## 账号配置格式
 
 ```yaml
-# data/{项目}/accounts.yaml
+# rules/{项目}/accounts.yaml
 accounts:
   - id: account-001
     persona: 老王
@@ -42,7 +42,7 @@ accounts:
 用户启动后，每 15 分钟执行一次：
 
 1. Read `data/{项目}/drafts/index.md` → 找到状态为 `pending_publish` 的条目
-2. Read `data/{项目}/accounts.yaml` → 找到匹配人设的活跃账号
+2. Read `rules/{项目}/accounts.yaml` → 找到匹配人设的活跃账号
 3. 检查时间窗口（是否在账号 preferred_window 内）
 4. 检查冷却时间（距该账号上次发布 ≥ 24 小时，同项目其他账号 ≥ 3 小时）
 5. 通过后，随机延迟（窗口内 0-30 分钟），然后执行发布
@@ -54,12 +54,12 @@ accounts:
 source venv/Scripts/activate && python skills/xhs-publish/scripts/publisher.py \
   --draft-dir data/{项目}/drafts/{YYYYMMDD}_{seq}/ \
   --account-id {账号ID} \
-  --accounts-config data/{项目}/accounts.yaml
+  --accounts-config rules/{项目}/accounts.yaml
 ```
 
 ### 检查登录态
 
-Read `data/{项目}/accounts.yaml`，列出每个账号的 `login_status`。
+Read `rules/{项目}/accounts.yaml`，列出每个账号的 `login_status`。
 
 ## 发布脚本 (publisher.py)
 
@@ -69,7 +69,7 @@ Bash 调用：
 source venv/Scripts/activate && python skills/xhs-publish/scripts/publisher.py \
   --draft-dir data/{项目}/drafts/{YYYYMMDD}_{seq}/ \
   --account-id {account_id} \
-  --accounts-config data/{项目}/accounts.yaml
+  --accounts-config rules/{项目}/accounts.yaml
 ```
 
 脚本执行 Playwright 发布10步：

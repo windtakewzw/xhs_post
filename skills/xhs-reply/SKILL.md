@@ -16,7 +16,7 @@ description: Use when replying to comments on published Xiaohongshu posts, writi
 
 - 待回复队列：`data/{项目}/comments/pending.json`（xhs-monitor 产出）
 - 项目规则：`rules/{项目}/rules.md` → 获取人设语言风格和口径
-- 账号配置：`data/{项目}/accounts.yaml`
+- 账号配置：`rules/{项目}/accounts.yaml`
 
 ## 回复流程
 
@@ -40,7 +40,7 @@ source venv/Scripts/activate && python skills/xhs-reply/scripts/replier.py \
   --comment-id {评论ID} \
   --reply-text "{回复文本}" \
   --account-id {账号ID} \
-  --accounts-config data/{项目}/accounts.yaml
+  --accounts-config rules/{项目}/accounts.yaml
 ```
 
 5. 发送成功后，从 `pending.json` 中移除该条，写入 `data/{项目}/comments/replied.json` 记录历史
