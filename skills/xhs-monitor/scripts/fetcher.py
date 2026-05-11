@@ -57,7 +57,7 @@ def idle_scroll(page):
 def idle_browse(page, label=""):
     """Simulate a human clicking around and reading - quick version."""
     menus = random.sample(["首页", "笔记管理", "数据看板", "活动中心", "笔记灵感", "创作学院", "创作百科"],
-                          random.randint(1, 2))
+                          random.randint(1, 1) if random.random() < 0.6 else 0)
     for menu in menus:
         mouse_wander(page)
         pause(0.3, 1.0)
@@ -81,23 +81,23 @@ def scroll_in_detail_panel(page):
     page.evaluate("""() => {
         for (const el of document.querySelectorAll('[class*="detail"], [class*="panel"], [class*="drawer"], [class*="content"]')) {
             if (el.scrollHeight > el.clientHeight + 50) {
-                for (let i = 0; i < 8; i++) {
-                    el.scrollTop += 350 + Math.random() * 400;
+                for (let i = 0; i < 5; i++) {
+                    el.scrollTop += 400 + Math.random() * 300;
                 }
                 return;
             }
         }
     }""")
 
-    # Also do some mouse wheel scrolling for realism
-    for _ in range(random.randint(3, 6)):
+    # Also do some mouse wheel scrolling for realism (reduced)
+    for _ in range(random.randint(2, 3)):
         mouse_wander(page)
-        pause(0.3, 0.8)
-        page.mouse.wheel(0, random.randint(300, 800))
-        pause(0.8, 2.5)
-        if random.random() < 0.4:
-            page.mouse.wheel(0, random.randint(-400, -100))
-            pause(0.5, 1.5)
+        pause(0.2, 0.5)
+        page.mouse.wheel(0, random.randint(300, 700))
+        pause(0.5, 1.5)
+        if random.random() < 0.3:
+            page.mouse.wheel(0, random.randint(-300, -100))
+            pause(0.3, 0.8)
 
 
 def extract_page_data(page) -> dict:
@@ -137,7 +137,7 @@ def fetch(args):
     with sync_playwright() as pw:
         browser = pw.chromium.launch(
             headless=args.headless,
-            args=["--disable-gpu", "--disable-dev-shm-usage"]
+            args=["--disable-gpu", "--disable-dev-shm-usage", "--disable-software-rasterizer", "--disable-features=VizDisplayCompositor"]
         )
         context = browser.new_context(
             storage_state=state_file if os.path.exists(state_file) else None,
@@ -149,7 +149,7 @@ def fetch(args):
 
         # === Go to note manager ===
         page.goto("https://creator.xiaohongshu.com/new/note-manager", wait_until="load")
-        pause(5, 9)  # Full page load wait
+        pause(3, 5)  # Page load wait
 
         if page.locator('[placeholder*="手机号"]').first.count():
             print(json.dumps({"error": "creator_not_logged_in"}, ensure_ascii=False))
@@ -158,35 +158,32 @@ def fetch(args):
         # === Pre-browse anti-detection ===
         idle_browse(page, "pre")
         page.goto("https://creator.xiaohongshu.com/new/note-manager", wait_until="load")
-        pause(4, 7)
+        pause(2, 4)
 
         # === Open first note detail ===
         mouse_wander(page)
-        pause(1, 2)
+        pause(0.5, 1.5)
         imgs = page.locator('img.content')
         if imgs.count() == 0:
             print(json.dumps({"error": "no_notes"}, ensure_ascii=False))
             sys.exit(1)
 
         hover_then_click(page, imgs.first)
-        pause(4, 7)
+        pause(2, 4)
 
         # === Scroll for comments ===
         scroll_in_detail_panel(page)
-        pause(2, 4)
+        pause(1, 2)
 
         # === Extract data ===
         data = extract_page_data(page)
-        pause(1, 2)
-
-        # === Post-browse anti-detection ===
-        idle_browse(page, "post")
+        pause(0.5, 1)
 
         # Close detail by clicking sidebar area
         mouse_wander(page)
-        pause(0.5, 1.5)
+        pause(0.3, 0.8)
         page.mouse.click(random.randint(50, 250), random.randint(80, 300))
-        pause(1, 2)
+        pause(0.5, 1.5)
 
         context.storage_state(path=state_file)
         browser.close()
