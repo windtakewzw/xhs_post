@@ -34,7 +34,7 @@ rules/
 1. Read `rules/{项目}/rules.md` → 获取该人设的完整定义（姓名/性格/语言风格/口头禅/内容禁忌）
 2. Read `rules/copywriting-rules.md` → 获取去AI味写作法则和合规红线
 3. 选题：按人设的 `content_sequence` 轮换序列取下一个类型。查 `data/{项目}/drafts/index.md` 获取发布历史，跳过3天内已发过的内容类型
-4. 加载项目素材（如有）：Read `data/{项目}/` 下的楼盘简介、销售说辞、户型清单等作为事实依据
+4. 加载项目素材：Read `materials/{项目}/docs/` 下的 Markdown 文件作为事实依据
 5. 生成文案：按人设风格 + 去AI味法则 + 合规要求生成标题、正文、标签，输出格式：
 
 ```markdown
@@ -76,7 +76,7 @@ review_required: {true/false}
 ```bash
 source venv/Scripts/activate && python skills/xhs-generate/scripts/imager.py \
   --content-type {类型} --persona-type {人设类型} \
-  --project-dir data/{项目} --title "{标题}" \
+  --project-dir materials/{项目} --title "{标题}" \
   --output-dir data/{项目}/drafts/{id}/images/
 ```
 

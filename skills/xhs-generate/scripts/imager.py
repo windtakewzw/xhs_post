@@ -44,8 +44,8 @@ def decide_mode(project_dir: str, is_cover: bool) -> tuple:
     """Returns (mode, strength, compliance_label)."""
     if is_cover:
         return ("text2img", None, None)
-    photos = os.path.isdir(os.path.join(project_dir, "media", "photos"))
-    renders = os.path.isdir(os.path.join(project_dir, "media", "renders"))
+    photos = os.path.isdir(os.path.join(project_dir, "photos"))
+    renders = os.path.isdir(os.path.join(project_dir, "renders"))
     if photos:
         return ("img2img", 0.35, None)
     if renders:

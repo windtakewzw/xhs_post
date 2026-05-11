@@ -26,7 +26,7 @@ accounts:
   - id: account-001
     persona: 老王
     persona_type: investment-advisor
-    user_data_dir: data/accounts/account-001/
+    user_data_dir: accounts/account-001/
     login_status: active
     last_published_at: 2026-05-12T20:00:00
     daily_limit: 1

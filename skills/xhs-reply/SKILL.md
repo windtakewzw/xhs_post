@@ -1,76 +1,49 @@
 ---
 name: xhs-reply
-description: Use when replying to comments on published Xiaohongshu posts, writing responses in persona voice, or processing the pending comment queue
+description: Use when replying to comments on Xiaohongshu posts using persona voice, or when reviewing comments that need replies
 ---
 
 # 小红书评论回复
 
-读取待回复的评论，用人设语气撰写回复，通过 Playwright 发送。
+用人设语气自动回复评论。通常在 `/xhs-monitor` 发现需要回复的评论后触发。
 
 ## 触发场景
 
-1. **处理待回复** — 用户说"回复评论"、"处理评论"、"reply"时处理 pending 队列
-2. **回复指定评论** — 用户说"回复这条评论"时用指定人设风格回复
+1. **手动回复** — "看看有没有需要回复的评论"、"帮老王回复一下"
+2. **定时联动** — `/xhs-monitor` 发现需回复评论后自动触发 `/xhs-reply`
 
 ## 数据来源
 
-- 待回复队列：`data/{项目}/comments/pending.json`（xhs-monitor 产出）
+- 发布索引：`data/{项目}/drafts/index.md` → 获取笔记对应的人设
 - 项目规则：`rules/{项目}/rules.md` → 获取人设语言风格和口径
-- 账号配置：`rules/{项目}/accounts.yaml`
+- 账号配置：`rules/{项目}/accounts.yaml` → 获取账号信息
 
 ## 回复流程
 
-1. Read `data/{项目}/comments/pending.json` → 获取待回复评论列表
-2. Read `rules/{项目}/rules.md` → 获取对应人设的语言风格、口头禅、内容禁忌
-3. 对每条评论，按**对应笔记发布者的人设**生成回复：
-
-**回复原则：**
-- 保持人设语气一致（投资顾问理性克制、生活顾问温暖亲切、家庭顾问贴心务实）
-- 简短自然（1-3句话），像真人在对话，不是客服
-- 价格相关 → 引导私信，不直接报具体价格
-- 位置/户型 → 邀请到访（可提供营销中心地址）
-- 正面评价 → 表达感谢，保持人设风格
-- 负面/投诉 → 礼貌回应，不争论
-
-4. 通过 Bash 调用 replier.py 发送回复：
+1. Claude 根据监控结果，选择需要回复的评论
+2. Read `rules/{项目}/rules.md` → 获取对应人设的口头禅、语言风格、内容禁忌
+3. Claude 用该人设的语气生成回复文案
+4. 通过 Bash 发送回复：
 
 ```bash
 source venv/Scripts/activate && python skills/xhs-reply/scripts/replier.py \
-  --note-id {笔记ID} \
-  --comment-id {评论ID} \
-  --reply-text "{回复文本}" \
+  --reply-text "{回复文案}" \
   --account-id {账号ID} \
-  --accounts-config rules/{项目}/accounts.yaml
+  --accounts-dir accounts/{账号ID}/
 ```
 
-5. 发送成功后，从 `pending.json` 中移除该条，写入 `data/{项目}/comments/replied.json` 记录历史
+replier 流程：note-manager → 点封面进详情 → 滚动到评论区 → 填写回复 → 发送。
 
-## 回复模板（按分类）
+## 回复风格
 
-| 类别 | 方向 |
-|------|------|
-| price_inquiry | "价格根据楼层和户型有所不同，方便的话可以来售楼处看看，我帮你详细算一下" |
-| visit_intent | "我们在{地址}，每天{时间}都可以，你来之前跟我说一声" |
-| interest | 保持人设风格的道谢（如老王："谢谢关注，用数据说话"） |
-| general | 不回复 |
-| complaint | 人工处理，不自动回复 |
-| sensitive | 不回复，标记人工 |
+严格遵循 `rules/{项目}/rules.md` 中的人设定义：
+- 语言风格（如"理性自信、多用数据对比"）
+- 口头禅（如"用数据说话"、"说实话"）
+- 写作用语习惯（✅ 和 ❌ 列表）
+- 内容禁忌（如不承诺升值幅度、不制造焦虑）
 
-模板仅作方向参考，具体回复需按人设重新表述。
+## 注意事项
 
-## 回复记录
-
-`data/{项目}/comments/replied.json`：
-
-```json
-[
-  {
-    "note_id": "xxx",
-    "comment_id": "c123",
-    "comment_content": "三房多少钱？",
-    "reply_content": "价格根据楼层和户型有所不同，方便加微信发详细资料给你",
-    "persona": "老王",
-    "replied_at": "2026-05-13T10:05:00"
-  }
-]
-```
+- 同一评论不重复回复
+- 每次回复前检查账号登录态，过期则提示重新登录
+- 负面/敏感评论不自动回复，通知人工处理
