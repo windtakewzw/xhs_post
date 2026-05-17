@@ -40,15 +40,34 @@ ls -d materials/*/ 2>/dev/null | sed 's|materials/||;s|/||'
 |------|------|
 | 无任何子目录 | 先在 OSS 中创建项目素材目录 |
 
-### 检查 4：项目 docs 目录有素材文件
+### 检查 4：各项目有素材子目录
+
+项目素材目录结构如下（OSS 端 `sales/data/{项目}/` 下）：
+
+| 目录 | 内容 |
+|------|------|
+| `楼盘简介/` | 项目概况、区位、开发商、亮点等 |
+| `楼盘参数/` | 容积率、绿化率、栋数、总户数等技术指标 |
+| `户型清单/` | 各户型面积、格局、配置说明 |
+| `销售说辞/` | 各卖点的标准话术 |
+| `抗性说辞/` | 针对客户异议的应对话术 |
+| `百问百答/` | 常见问题解答 |
+
+验证：
 
 ```bash
-test -d "materials/{项目}/docs" && ls materials/{项目}/docs/*.md 1>/dev/null 2>&1 && echo "OK" || echo "MISSING"
+for proj in $(ls -d materials/*/ | sed 's|materials/||;s|/||'); do
+  missing=""
+  for dir in 楼盘简介 楼盘参数 户型清单 销售说辞 抗性说辞 百问百答; do
+    ls "materials/$proj/$dir/"*.md 1>/dev/null 2>&1 || missing="$missing $dir"
+  done
+  [ -z "$missing" ] && echo "[OK] $proj" || echo "[MISS] $proj — 缺:$missing"
+done
 ```
 
 | 异常 | 处理 |
 |------|------|
-| docs 不存在或没有 .md 文件 | 在 OSS 的 `{项目}/docs/` 下补充文案素材 |
+| 某项目缺少必需子目录 | 在 OSS 的 `{项目}/` 下补充对应素材目录和 .md 文件 |
 
 ## 步骤 1：选择项目
 
@@ -64,7 +83,7 @@ Claude 展示列表，让用户选择初始化哪个。
 cp -r rules/_template "rules/{项目名}"
 ```
 
-模板 `rules/_template/rules.md` 中 `{{ }}` 为占位符。Claude 读取 `materials/{项目}/docs/` 下的素材了解项目信息后，与用户对话逐一替换。
+模板 `rules/_template/rules.md` 中 `{{ }}` 为占位符。Claude 读取 `materials/{项目}/` 下各素材子目录（楼盘简介、楼盘参数、户型清单、销售说辞、抗性说辞、百问百答等）了解项目信息后，与用户对话逐一替换。
 
 ### 2.1 确认基本信息
 

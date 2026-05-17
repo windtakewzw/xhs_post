@@ -24,10 +24,11 @@ cp -r "$TEMP/rclone_tmp"/*/* "$USERPROFILE/tools/rclone/"
 [Environment]::SetEnvironmentVariable("Path", "$env:Path;$env:USERPROFILE\tools\rclone", "User")
 ```
 
-重启终端后验证：
+当前终端 Session 需重启窗口才能识别新的 PATH。验证是否生效：
 
 ```bash
 rclone --version
+# 如果找不到 rclone，用绝对路径：%USERPROFILE%\tools\rclone\rclone.exe
 ```
 
 ## 步骤 3：配置 OSS 连接
@@ -52,26 +53,59 @@ rclone config create oss-xhs s3 \
 
 ## 步骤 4：挂载 OSS
 
+如果之前有残留挂载，先清理：
+
 ```bash
-mkdir -p materials
-rclone mount oss-xhs:{Bucket名称} materials/ \
-  --cache-dir "$TEMP/rclone-cache" \
-  --vfs-cache-mode writes \
-  --daemon
+taskkill /F /IM rclone.exe 2>/dev/null
+rm -rf materials
 ```
 
-挂载后 `materials/` 目录显示 OSS 中的文件。
+然后挂载（Windows 不支持 `--daemon`，以后台进程方式运行）：
+
+```bash
+rclone mount oss-xhs:{Bucket名称}/sales/data materials/ \
+  --cache-dir "$TEMP/rclone-cache" \
+  --vfs-cache-mode writes &
+```
+
+挂载后 `materials/` 目录直接显示各项目素材目录（如 `中央半岛`、`凤翔豪庭` 等），省去 `sales/data/` 嵌套。
+
+> **说明**：路径 `sales/data` 是此 Bucket 的实际素材根目录。如果 Bucket 结构调整，相应修改挂载路径即可。
 
 ## 步骤 5：验证
 
 ```bash
 ls materials/
-# 应看到 OSS 中各项目的素材目录
+# 应直接看到各项目素材目录（如 中央半岛/、凤翔豪庭/ 等）
+```
+
+## 步骤 6：配置开机自启（可选）
+
+项目已内置启动脚本 `scripts/mount-oss.bat`，通过 Windows 计划任务实现登录时自动挂载。
+
+在项目根目录下执行：
+
+```powershell
+schtasks /Create /TN 'XHS Mount OSS' /TR "$((Get-Location).Path)\scripts\mount-oss.bat" /SC ONLOGON /F
+```
+
+验证：
+
+```powershell
+schtasks /Run /TN 'XHS Mount OSS'; Start-Sleep 6; Get-ChildItem materials\
+```
+
+管理：
+
+```powershell
+schtasks /Query /TN 'XHS Mount OSS'      # 查看任务
+schtasks /Delete /TN 'XHS Mount OSS' /F  # 删除任务
 ```
 
 ## 注意事项
 
-- `--daemon` 使 Rclone 在后台运行。重启电脑后需重新挂载（可配置为开机自启）
+- Windows 不支持 `--daemon`，挂载以后台进程方式运行。重启电脑后由计划任务自动重新挂载
+- 如有残留 rclone 进程导致挂载失败，先执行 `taskkill /F /IM rclone.exe` 清理
 - 挂载路径 `materials/` 是相对路径，必须在项目根目录下执行
 - 素材在 OSS 端由运营维护，本地只读，本项目的任何脚本或 Skill 均不允许向 `materials/` 写入
 
