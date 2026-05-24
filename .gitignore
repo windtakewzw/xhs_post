@@ -7,3 +7,7 @@ __pycache__/
 rules/*/
 !rules/_template/
 data/*/
+
+# Browser login profiles and project materials (synced from OSS)
+accounts/
+materials/

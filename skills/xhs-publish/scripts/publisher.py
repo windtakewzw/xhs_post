@@ -157,12 +157,16 @@ def _fill_content(page, post):
     # --- Title ---
     log(f"填写标题: {post['title'][:30]}")
     rand_delay(1, 2)
-    title_el = page.locator('input.d-text').first
+    title_el = page.locator('[placeholder*="填写标题"]').first
     if not title_el.count():
-        title_el = page.locator('[placeholder*="填写标题"]').first
+        title_el = page.locator('input.d-text[class*="--color-text-title"]').first
+    if not title_el.count():
+        title_el = page.locator('input.d-text').first
     if title_el.count():
         human_click(page, title_el)
-        title_el.fill("")
+        title_el.click()
+        page.keyboard.press("Control+a")
+        rand_delay(0.1, 0.2)
         human_type(page, post["title"][:20])
     else:
         log("WARN: 未找到标题输入框")
@@ -268,9 +272,15 @@ def _publish_cdp(args, post, account, state_file):
         page.goto(CREATOR_PUBLISH_URL, wait_until="networkidle", timeout=30000)
         rand_delay(2, 3)
 
+        # --- Step 1.5: Switch to 图文 mode ---
+        log("Step 1.5: 切换到图文模式...")
+        page.evaluate("() => { const tabs = document.querySelectorAll('.creator-tab'); for (const t of tabs) { if (t.textContent.includes('上传图文')) { t.click(); return true; } } return false; }")
+        rand_delay(1, 2)
+
         # --- Step 2: Upload images ---
         log("Step 2: 上传图片...")
         images_dir = os.path.join(args.draft_dir, "images")
+        uploaded = False
         if os.path.isdir(images_dir):
             images = sorted(
                 [f for f in os.listdir(images_dir)
@@ -282,6 +292,7 @@ def _publish_cdp(args, post, account, state_file):
                     file_input.set_input_files(paths)
                     log(f"已选择 {len(paths)} 张图片, 等待上传...")
                     rand_delay(4, 6)
+                    uploaded = True
                 else:
                     log("WARN: 未找到图片上传input")
             else:
@@ -289,13 +300,41 @@ def _publish_cdp(args, post, account, state_file):
         else:
             log("无图片目录")
 
+        if not uploaded:
+            log("生成占位图以激活编辑器...")
+            import struct, zlib
+            placeholder = os.path.join(args.draft_dir, "_placeholder.png")
+            def _mkpng(p):
+                def _chunk(ct, d):
+                    c = ct + d
+                    return struct.pack('>I', len(d)) + c + struct.pack('>I', zlib.crc32(c) & 0xffffffff)
+                ihdr = struct.pack('>IIBBBBB', 1200, 800, 8, 2, 0, 0, 0)
+                raw = b''
+                for _ in range(800):
+                    raw += b'\x00' + b'\x33\x66\x99' * 1200
+                return (b'\x89PNG\r\n\x1a\n' +
+                        _chunk(b'IHDR', ihdr) +
+                        _chunk(b'IDAT', zlib.compress(raw)) +
+                        _chunk(b'IEND', b''))
+            with open(placeholder, 'wb') as f:
+                f.write(_mkpng(placeholder))
+            file_input = page.locator('input.upload-input').first
+            if file_input.count():
+                file_input.set_input_files(placeholder.replace('\\', '/'))
+                log("已上传占位图")
+                rand_delay(3, 5)
+                try:
+                    os.remove(placeholder)
+                except:
+                    pass
+
         # --- Steps 3-5: Fill content ---
         _fill_content(page, post)
 
         # --- Step 6: Publish ---
         log("Step 6: 点击发布...")
         rand_delay(2, 3)
-        publish_btn = page.locator('button.d-button').filter(has_text="发布").first
+        publish_btn = page.locator('button.ce-btn.bg-red').first
         if not publish_btn.count():
             publish_btn = page.locator('button').filter(has_text="发布").first
         if publish_btn.count():
@@ -311,7 +350,6 @@ def _publish_cdp(args, post, account, state_file):
         log("反检测: 发布后随机浏览...")
         random_browse(page, name="发布后")
 
-        # Save cookies snapshot for portability
         cookies = ctx.cookies()
         os.makedirs(os.path.dirname(state_file), exist_ok=True)
         with open(state_file, "w", encoding="utf-8") as f:
@@ -398,7 +436,7 @@ def _publish_launch(args, post, account, state_file):
         # --- Step 6: Publish ---
         log("Step 6: 点击发布...")
         rand_delay(2, 3)
-        publish_btn = page.locator('button.d-button').filter(has_text="发布").first
+        publish_btn = page.locator('button.ce-btn.bg-red').first
         if not publish_btn.count():
             publish_btn = page.locator('button').filter(has_text="发布").first
         if publish_btn.count():
